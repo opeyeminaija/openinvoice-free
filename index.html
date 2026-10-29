@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OpenInvoice — Free Invoice & Receipt Generator</title>
+<link rel="manifest" href="manifest.webmanifest"><meta name="theme-color" content="#064e3b">
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+    
+    <!-- External Libraries -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
+</head>
+<body>
+
+    <div id="app">
+        <div class="oi-tools no-print"><button class="btn btn-secondary" onclick="app.showView('oi-history')">📚 History</button><button class="btn btn-secondary" onclick="app.showView('oi-settings')">⚙️ Settings & Backup</button></div>
+        <!-- Main Landing Page -->
+        <section id="landing-page" class="view active">
+            <div class="landing-content">
+                <div class="landing-badge">Free · Open Source · Privacy-first</div>
+                <h1>OpenInvoice</h1>
+                <p>Create stunning, professional documents in seconds. Whether you need an A4 corporate invoice or a clean POS thermal receipt, generate it instantly.</p>
+                <div class="landing-illustration">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+                </div>
+                <div class="action-buttons">
+                    <button class="btn btn-primary btn-large" onclick="app.showView('invoice-form')">
+                        <span>Generate Invoice</span> &rarr;
+                    </button>
+                    <button class="btn btn-secondary btn-large" onclick="app.showView('receipt-form')">
+                        <span>Generate Receipt</span> &rarr;
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- Invoice Form Page -->
+        <section id="invoice-form" class="view">
+            <div class="top-nav">
+                <button class="btn-text" onclick="app.showView('landing-page')">&larr; Back to Home</button>
+                <h2>Draft Invoice</h2>
+            </div>
+            
+            <div class="form-container">
+                <form id="form-invoice" onsubmit="app.generateDocument(event, 'invoice')">
+                    
+                    <div class="form-grid-layout">
+                        <!-- Left Column: Business & Customer -->
+                        <div class="form-column">
+                            <div class="card">
+                                <h3>Business Details</h3>
+                                <div class="form-group full-width"><label>Business Name</label><input type="text" id="inv-biz-name" required placeholder="e.g. Browser Studio"></div>
+                                <div class="grid-2">
+                                    <div class="form-group"><label>Phone</label><input type="text" id="inv-biz-phone" required></div>
+                                    <div class="form-group"><label>Email</label><input type="email" id="inv-biz-email"></div>
+                                </div>
+                                <div class="form-group full-width"><label>Address / Branch</label><input type="text" id="inv-biz-address" required placeholder="e.g. Lagos, Nigeria"></div>
+                            </div>
+
+                            <div class="card">
+                                <h3>Customer Details</h3>
+                                <div class="form-group full-width"><label>Customer Name</label><input type="text" id="inv-cus-name" required placeholder="e.g. Abdulsalam Ridwan"></div>
+                                <div class="grid-2">
+                                    <div class="form-group"><label>Phone</label><input type="text" id="inv-cus-phone"></div>
+                                    <div class="form-group"><label>Email</label><input type="email" id="inv-cus-email"></div>
+                                </div>
+                                <div class="form-group full-width"><label>Address</label><input type="text" id="inv-cus-address"></div>
+                            </div>
+                        </div>
+
+                        <!-- Right Column: Settings & Items -->
+                        <div class="form-column">
+                            <div class="card">
+                                <h3>Document Settings</h3>
+                                <div class="grid-2">
+                                    <div class="form-group"><label>Invoice #</label><input type="text" id="inv-number" required placeholder="INV-2026-001"></div>
+                                    <div class="form-group"><label>Served By (Cashier)</label><input type="text" id="inv-cashier" placeholder="e.g. Cashier Name"></div>
+                                    <div class="form-group"><label>Date</label><input type="date" id="inv-date" required></div>
+                                    <div class="form-group"><label>Due Date</label><input type="date" id="inv-due"></div>
+                                </div>
+                            </div>
+
+                            <div class="card template-selector">
+                                <h3>Select Template Style</h3>
+                                <div class="grid-3">
+                                    <label class="template-option"><input type="radio" name="inv-template" value="a4" checked> <span>Professional A4</span></label>
+                                    <label class="template-option"><input type="radio" name="inv-template" value="half-a4"> <span>Compact Half-A4</span></label>
+                                    <label class="template-option"><input type="radio" name="inv-template" value="thermal"> <span>POS/Thermal</span></label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Items List -->
+                    <div class="card mt-4">
+                        <h3>Line Items</h3>
+                        <div class="items-header">
+                            <div>Product / Description</div>
+                            <div>Qty</div>
+                            <div>Rate</div>
+                            <div>Amount</div>
+                            <div></div>
+                        </div>
+                        <div id="inv-items-container" class="items-container"></div>
+                        <button type="button" class="btn btn-secondary mt-2" onclick="app.addItemRow('invoice')">+ Add Item</button>
+                        
+                        <div class="totals-section">
+                            <div class="total-display">Grand Total: <span id="inv-grand-total">0.00</span></div>
+                        </div>
+                    </div>
+
+                    <!-- Payment Info -->
+                    <div class="card mt-4">
+                        <h3>Payment Details & Notes</h3>
+                        <div class="grid-3">
+                            <div class="form-group"><label>Bank Name</label><input type="text" id="inv-bank-name"></div>
+                            <div class="form-group"><label>Account Name</label><input type="text" id="inv-acc-name"></div>
+                            <div class="form-group"><label>Account Number</label><input type="text" id="inv-acc-number"></div>
+                        </div>
+                        <div class="form-group mt-2 full-width"><label>Terms & Conditions / Notes</label><input type="text" id="inv-notes" placeholder="**ITEMS BOUGHT IN GOOD CONDITION ARE NOT RETURNABLE**"></div>
+                    </div>
+
+                    <div class="submit-area">
+                        <button type="submit" class="btn btn-primary btn-mega">Generate Invoice Preview</button>
+                    </div>
+                </form>
+            </div>
+        </section>
+
+        <!-- Receipt Form Page -->
+        <section id="receipt-form" class="view">
+            <div class="top-nav">
+                <button class="btn-text" onclick="app.showView('landing-page')">&larr; Back to Home</button>
+                <h2>Draft Receipt</h2>
+            </div>
+            
+            <div class="form-container">
+                <form id="form-receipt" onsubmit="app.generateDocument(event, 'receipt')">
+                    
+                    <div class="form-grid-layout">
+                        <!-- Left Column -->
+                        <div class="form-column">
+                            <div class="card">
+                                <h3>Business Details</h3>
+                                <div class="form-group full-width"><label>Business Name</label><input type="text" id="rec-biz-name" required placeholder="e.g. Browser Studio"></div>
+                                <div class="grid-2">
+                                    <div class="form-group"><label>Phone</label><input type="text" id="rec-biz-phone" required></div>
+                                    <div class="form-group"><label>Email</label><input type="email" id="rec-biz-email"></div>
+                                </div>
+                                <div class="form-group full-width"><label>Address / Branch</label><input type="text" id="rec-biz-address" required placeholder="e.g. Lagos, Nigeria"></div>
+                            </div>
+
+                            <div class="card">
+                                <h3>Customer Details</h3>
+                                <div class="form-group full-width"><label>Customer Name</label><input type="text" id="rec-cus-name" required placeholder="e.g. Abdulsalam Ridwan"></div>
+                                <div class="grid-2">
+                                    <div class="form-group"><label>Phone</label><input type="text" id="rec-cus-phone"></div>
+                                    <div class="form-group"><label>Email</label><input type="email" id="rec-cus-email"></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Right Column -->
+                        <div class="form-column">
+                            <div class="card">
+                                <h3>Receipt Settings</h3>
+                                <div class="grid-2">
+                                    <div class="form-group"><label>Receipt #</label><input type="text" id="rec-number" required placeholder="REC-2026-001"></div>
+                                    <div class="form-group"><label>Payment Method</label><input type="text" id="rec-method" required placeholder="Bank Transfer"></div>
+                                    <div class="form-group"><label>Date</label><input type="date" id="rec-date" required></div>
+                                    <div class="form-group"><label>Time</label><input type="time" id="rec-time" required></div>
+                                    <div class="form-group full-width"><label>Served By (Cashier)</label><input type="text" id="rec-cashier" placeholder="e.g. Cashier Name"></div>
+                                </div>
+                            </div>
+
+                            <div class="card template-selector">
+                                <h3>Select Template Style</h3>
+                                <div class="grid-3">
+                                    <label class="template-option"><input type="radio" name="rec-template" value="a4"> <span>Professional A4</span></label>
+                                    <label class="template-option"><input type="radio" name="rec-template" value="half-a4"> <span>Compact Half-A4</span></label>
+                                    <label class="template-option"><input type="radio" name="rec-template" value="thermal" checked> <span>POS/Thermal</span></label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Items -->
+                    <div class="card mt-4">
+                        <h3>Purchased Items</h3>
+                        <div class="items-header">
+                            <div>Product / Description</div>
+                            <div>Qty</div>
+                            <div>Rate</div>
+                            <div>Amount</div>
+                            <div></div>
+                        </div>
+                        <div id="rec-items-container" class="items-container"></div>
+                        <button type="button" class="btn btn-secondary mt-2" onclick="app.addItemRow('receipt')">+ Add Item</button>
+                        
+                        <div class="totals-section">
+                            <div class="total-display">Total Paid: <span id="rec-grand-total">0.00</span></div>
+                        </div>
+                    </div>
+
+                    <div class="card mt-4">
+                        <div class="form-group full-width"><label>Footer Notes</label><input type="text" id="rec-notes" placeholder="**ITEMS BOUGHT IN GOOD CONDITION ARE NOT RETURNABLE**"></div>
+                    </div>
+
+                    <div class="submit-area">
+                        <button type="submit" class="btn btn-primary btn-mega">Generate Receipt Preview</button>
+                    </div>
+                </form>
+            </div>
+        </section>
+
+        <section id="oi-history" class="view"><div class="form-container"><button class="btn-text" onclick="app.showView('landing-page')">← Home</button><h1>Saved documents</h1><p>Documents are stored only in this browser. Export backups regularly.</p><input id="oi-search" type="search" placeholder="Search number, business or customer" oninput="oi.renderHistory()"><div id="oi-history-list"></div></div></section>
+<section id="oi-settings" class="view"><div class="form-container"><button class="btn-text" onclick="app.showView('landing-page')">← Home</button><h1>Business settings</h1><p>Saved locally on this device. No account required.</p><div class="card oi-settings-grid"><label>Business name<input id="oi-biz-name" autocomplete="organization"></label><label>Phone<input id="oi-biz-phone" autocomplete="tel"></label><label>Email<input id="oi-biz-email" type="email"></label><label>Address<input id="oi-biz-address"></label><label>Bank name<input id="oi-bank-name"></label><label>Account name<input id="oi-acc-name"></label><label>Account number<input id="oi-acc-number"></label><label>Currency<select id="oi-currency"><option value="NGN">NGN — ₦</option><option value="USD">USD — $</option><option value="GBP">GBP — £</option><option value="EUR">EUR — €</option><option value="GHS">GHS — GH₵</option><option value="KES">KES — KSh</option></select></label><label>Appearance<select id="oi-theme"><option value="light">Light</option><option value="dark">Dark</option></select></label></div><div class="oi-tools"><button class="btn btn-primary" onclick="oi.saveSettings()">Save settings</button><button class="btn btn-secondary" onclick="oi.exportBackup()">Export JSON backup</button><label class="btn btn-secondary oi-import">Import backup<input type="file" accept="application/json,.json" onchange="oi.importBackup(event)" hidden></label><button class="btn btn-danger" onclick="oi.clearData()">Erase local data</button></div><p class="oi-note">Privacy: data is saved in this browser's local storage. Clearing browser data or changing devices can erase it. Backups contain customer and financial information; keep them private. There is no cloud sync.</p></div></section>
+        <!-- Document Preview Page -->
+        <section id="review-page" class="view">
+            <div class="review-toolbar no-print">
+                <button class="btn btn-secondary" onclick="app.editDocument()">&larr; Edit Details</button>
+                <div class="export-actions">
+                    <button class="btn btn-outline" onclick="app.printDocument()">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 6 2 18 2 18 9"></polyline><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path><rect x="6" y="14" width="12" height="8"></rect></svg> Print
+                    </button>
+                    <button class="btn btn-outline" onclick="app.downloadPNG()">Download PNG</button>
+                    <button class="btn btn-primary" onclick="app.downloadPDF()">Download PDF</button><button class="btn btn-secondary" onclick="oi.saveCurrent()">Save to history</button>
+                </div>
+            </div>
+            
+            <div id="document-preview-wrapper">
+                <div id="document-preview"></div>
+            </div>
+        </section>
+    </div>
+
+    <script src="script.js"></script>
+<script src="openinvoice.js"></script>
+</body>
+</html>

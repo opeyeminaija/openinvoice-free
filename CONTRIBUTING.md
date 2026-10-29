@@ -1,0 +1,2 @@
+# Contributing
+Thank you for improving OpenInvoice. Report bugs using GitHub Issues with browser version, steps to reproduce, expected/actual behavior, and a screenshot if useful. Never upload real customer invoices or private information. For changes, fork the repository, make a focused branch, test invoice/receipt preview, save/history, backup import/export, and print, then open a pull request with test notes. Contributions must be your own or appropriately licensed.
